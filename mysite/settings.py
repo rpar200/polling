@@ -31,6 +31,15 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    ## Some of these applications use at least one database table by default, so this will need to
+    ## be created even though the applications come by default with django.
+    ## You can actually do this easily via 'python3 manage.py migrate'
+    ##
+    ## Whenever a new app is added, we run 'python3 manage.py makemigrations appNameGoesHere'
+    ## it tells django that we'd like the changes to be saved as a migration
+    ## Migrations are how django stores changes to models (database) !
+    ## the 'sqlmigrate' command takes migrations and returns their SQL. Keep in mind this doesn't migrate.
+    'polls.apps.PollsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -105,7 +114,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/New_York'
 
 USE_I18N = True
 
