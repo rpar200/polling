@@ -1,6 +1,16 @@
-<h1>{{ question.question_text }}</h1>
-<ul>
-{% for choice in question.choice_set.all %}
-    <li>{{ choice.choice_text }}</li>
-{% endfor %}
-</ul>
+<!-- We use POST instead of GET because we are manipulating the data serverside. -->
+<form action="{% url 'polls:vote' question.id %}" method="post">
+<!-- Because we are using POST that manipulates data on the server, it is prone to
+Cross Site Request Forgeries (CSRF). Butttt Django has systems in place to prevent this.
+One of them being the csrf_token. We use this whenever we target internal URLs. -->
+{% csrf_token %}
+<fieldset>
+    <legend><h1>{{ question.question_text }}</h1></legend>
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    {% for choice in question.choice_set.all %}
+        <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+        <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
+    {% endfor %}
+</fieldset>
+<input type="submit" value="Vote">
+</form>
