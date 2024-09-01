@@ -1,0 +1,7 @@
+li a {
+    color: green;
+}
+body {
+    /* Very important to use relative path when referencing static to other static elements */
+    background: white url("images/background.png") no-repeat;
+}
