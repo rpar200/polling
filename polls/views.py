@@ -4,7 +4,9 @@ from django.shortcuts import render
 from django.template import loader
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.views import generic
 from django.db.models import F
+from django.utils import timezone
 
 
 from polls.models import Question, Choice
@@ -12,39 +14,66 @@ from polls.models import Question, Choice
 
 # Views simply only need to do two things: return an HttpResponse or an Exception.
 
-# Returns the last 5 questions, separated by commas, in ascending order of publication date.
-def index(request):
-    latest_question_list = Question.objects.order_by("-pub_date")[:5]
-    template = loader.get_template("polls/index.html")
-    # Contexts are dictionaries - mapping template variable names to python objects
-    context = {
-        "latest_question_list": latest_question_list,
-    }
-    return HttpResponse(template.render(context, request))
-
-# This does the same thing as the above method but just uses django shortcuts.
-# The render() function takes the request object first, then template name, then a dict as 3rd optional final object.
-#
+# # Returns the last 5 questions, separated by commas, in ascending order of publication date.
 # def index(request):
 #     latest_question_list = Question.objects.order_by("-pub_date")[:5]
-#     context = {"latest_question_list": latest_question_list}
-#     return render(request, "polls/index.html", context)
+#     template = loader.get_template("polls/index.html")
+#     # Contexts are dictionaries - mapping template variable names to python objects
+#     context = {
+#         "latest_question_list": latest_question_list,
+#     }
+#     return HttpResponse(template.render(context, request))
+#
+# # This does the same thing as the above method but just uses django shortcuts.
+# # The render() function takes the request object first, then template name, then a dict as 3rd optional final object.
+# #
+# # def index(request):
+# #     latest_question_list = Question.objects.order_by("-pub_date")[:5]
+# #     context = {"latest_question_list": latest_question_list}
+# #     return render(request, "polls/index.html", context)
+#
+# def detail(request, question_id):
+#     try:
+#         question = Question.objects.get(pk=question_id)
+#     except Question.DoesNotExist:
+#         raise Http404("Question does not exist")
+#     return render(request, "polls/detail.html", {"question":question})
+#
+# # This does the same thing as the above method but just uses django shortcuts.
+# # The get_object_or_404() function takes a django model first and then x number of keyword arguments,
+# # which is then passed to the get() function. It raises a 404 if object doesn't exist.
+#
+# # After voting in a question, we want vote view to redirect to the results of that question.
+# def results(request, question_id):
+#     question = get_object_or_404(Question, pk=question_id)
+#     return render(request, "polls/results.html", {"question": question})
 
-def detail(request, question_id):
-    try:
-        question = Question.objects.get(pk=question_id)
-    except Question.DoesNotExist:
-        raise Http404("Question does not exist")
-    return render(request, "polls/detail.html", {"question":question})
+# Replaced the views we made with django generic views
+# Generic views need to know what model it is acting upon - hence the model keyword.
+class IndexView(generic.ListView):
+    template_name = "polls/index.html"
+    # We use context_object_name here because django automatically generates the context
+    # variable as question_list. We override this with context_object_name
+    context_object_name = "latest_question_list"
 
-# This does the same thing as the above method but just uses django shortcuts.
-# The get_object_or_404() function takes a django model first and then x number of keyword arguments,
-# which is then passed to the get() function. It raises a 404 if object doesn't exist.
+    def get_queryset(self):
+        """
+        Return the last five published questions (not including those set to be
+        published in the future).
+        """
+        return Question.objects.filter(pub_date__lte=timezone.now()).order_by("-pub_date")[
+               :5
+               ]
 
-# After voting in a question, we want vote view to redirect to the results of that question.
-def results(request, question_id):
-    question = get_object_or_404(Question, pk=question_id)
-    return render(request, "polls/results.html", {"question": question})
+
+class DetailView(generic.DetailView):
+    model = Question
+    template_name = "polls/detail.html"
+
+
+class ResultsView(generic.DetailView):
+    model = Question
+    template_name = "polls/results.html"
 
 def vote(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
